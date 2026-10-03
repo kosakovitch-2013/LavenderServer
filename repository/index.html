@@ -10,12 +10,30 @@
 
   <p>Package files for Lavender Linux.</p>
 
-  <iframe
-    src="https://github.com/kosakovitch-2013/Petals"
-    width="100%"
-    height="800"
-    title="Petals package repository">
-  </iframe>
+  <h2>Petals Package Repository</h2>
+
+  <ul id="repository">
+    <li>Loading repository...</li>
+  </ul>
+
+  <script>
+    const repository = document.getElementById("repository");
+
+    fetch("https://api.github.com/repos/kosakovitch-2013/Petals/contents")
+      .then(response => response.json())
+      .then(files => {
+        repository.innerHTML = "";
+
+        files.forEach(file => {
+          const item = document.createElement("li");
+          item.textContent = file.name;
+          repository.appendChild(item);
+        });
+      })
+      .catch(error => {
+        repository.innerHTML = "<li>Unable to load repository.</li>";
+        console.error(error);
+      });
+  </script>
 </body>
 </html>
-
