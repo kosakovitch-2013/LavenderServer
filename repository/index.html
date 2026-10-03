@@ -10,30 +10,88 @@
 
   <p>Package files for Lavender Linux.</p>
 
-  <h2>Petals Package Repository</h2>
+  <button id="backButton" hidden>Back</button>
+
+  <p id="currentPath">/</p>
 
   <ul id="repository">
     <li>Loading repository...</li>
   </ul>
 
   <script>
+    const owner = "kosakovitch-2013";
+    const repo = "Petals";
+
     const repository = document.getElementById("repository");
+    const backButton = document.getElementById("backButton");
+    const currentPath = document.getElementById("currentPath");
 
-    fetch("https://api.github.com/repos/kosakovitch-2013/Petals/contents")
-      .then(response => response.json())
-      .then(files => {
-        repository.innerHTML = "";
+    let pathHistory = [];
+    let currentDirectory = "";
 
-        files.forEach(file => {
-          const item = document.createElement("li");
-          item.textContent = file.name;
-          repository.appendChild(item);
+    function loadDirectory(path = "") {
+      currentDirectory = path;
+      currentPath.textContent = "/" + path;
+      repository.innerHTML = "<li>Loading...</li>";
+
+      const apiUrl =
+        "https://api.github.com/repos/" +
+        owner +
+        "/" +
+        repo +
+        "/contents/" +
+        path;
+
+      fetch(apiUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Unable to load directory");
+          }
+
+          return response.json();
+        })
+        .then(files => {
+          repository.innerHTML = "";
+
+          files.forEach(file => {
+            const item = document.createElement("li");
+
+            if (file.type === "dir") {
+              const button = document.createElement("button");
+
+              button.textContent = file.name + "/";
+              button.addEventListener("click", () => {
+                pathHistory.push(currentDirectory);
+                loadDirectory(file.path);
+              });
+
+              item.appendChild(button);
+            } else {
+              item.textContent = file.name;
+            }
+
+            repository.appendChild(item);
+          });
+
+          backButton.hidden = pathHistory.length === 0;
+        })
+        .catch(error => {
+          repository.innerHTML =
+            "<li>Unable to load this directory.</li>";
+
+          console.error(error);
         });
-      })
-      .catch(error => {
-        repository.innerHTML = "<li>Unable to load repository.</li>";
-        console.error(error);
-      });
+    }
+
+    backButton.addEventListener("click", () => {
+      const previousDirectory = pathHistory.pop();
+      loadDirectory(previousDirectory);
+
+      backButton.hidden = pathHistory.length === 0;
+    });
+
+    loadDirectory();
   </script>
 </body>
 </html>
+
