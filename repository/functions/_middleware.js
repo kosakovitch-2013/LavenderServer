@@ -1,25 +1,22 @@
 export async function onRequest(context) {
   const url = new URL(context.request.url);
+  let path = url.pathname;
 
-  // /repository/raw/* → proxy to GitHub
-  if (url.pathname.startsWith('/repository/raw/')) {
-    const ghPath = url.pathname.replace('/repository/raw', '');
+  if (path.startsWith('/repository')) {
+    path = path.replace('/repository', '') || '/';
+  }
+
+  if (path.startsWith('/raw/')) {
+    const ghPath = path.replace('/raw', '');
     return proxyToGitHub(ghPath);
   }
 
-  // /repository/PETALINDEX or /repository/dynamic/* (machine clients)
   const ua = context.request.headers.get('User-Agent') || '';
   const isMachine = /wget|curl|petals/i.test(ua);
-  if (
-    isMachine &&
-    (url.pathname === '/repository/PETALINDEX' ||
-      url.pathname.startsWith('/repository/dynamic/') ||
-      url.pathname.startsWith('/repository/meta/'))
-  ) {
-    return proxyToGitHub(url.pathname.replace('/repository', ''));
+  if (isMachine && (path === '/PETALINDEX' || path.startsWith('/dynamic/') || path.startsWith('/meta/'))) {
+    return proxyToGitHub(path);
   }
 
-  // Everything else → static files (index.html, etc.)
   return context.next();
 }
 
