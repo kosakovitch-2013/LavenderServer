@@ -1,0 +1,7 @@
+name = "lavender"
+main = "worker.js"
+compatibility_date = "2026-10-12"
+
+[assets]
+directory = "./repository"
+binding = "ASSETS"
